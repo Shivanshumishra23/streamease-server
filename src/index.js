@@ -16,7 +16,8 @@ app.use(bodyParser.json());
 const server = http.createServer(app);
 const io = new SocketIO(server, {
     cors: {
-        origin: 'http://localhost:3001', // React app's origin
+        // origin: 'http://localhost:3001', // React app's origin
+        origin: 'https://streamease.vercel.app',
         methods: ['GET', 'POST']
     }
 });
