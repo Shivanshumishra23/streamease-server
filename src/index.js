@@ -1,13 +1,217 @@
-import dotenv from 'dotenv';
-dotenv.config({});
-import connectDB from './db/index.js';
-import { app } from './app.js';
+// import dotenv from "dotenv";
+// dotenv.config({});
+// import connectDB from "./db/index.js";
+// import { app } from "./app.js";
 
-import http from 'http';
-import { Server as SocketIO } from 'socket.io';
-import { spawn } from 'child_process';
-import bodyParser from 'body-parser';
-import cors from 'cors';
+// import http from "http";
+// import { Server as SocketIO } from "socket.io";
+// import { spawn } from "child_process";
+// import bodyParser from "body-parser";
+// import cors from "cors";
+
+// // Middleware to parse JSON bodies
+// app.use(bodyParser.json());
+
+// // Use CORS middleware
+// const server = http.createServer(app);
+// const io = new SocketIO(server, {
+//   cors: {
+//     origin:`http://localhost:3001`, // React app's origin
+//     // origin: "https://streamease-ten.vercel.app",
+//     methods: ["GET", "POST"],
+//   },
+// });
+
+// let ffmpegProcesses = {};
+
+// const createFfmpegOptions = (platform, streamKey) => {
+//   let rtmpUrl;
+//   if (platform === "YouTube") {
+//     rtmpUrl = `rtmp://a.rtmp.youtube.com/live2/${streamKey}`;
+//   } else if (platform === "Facebook") {
+//     rtmpUrl = `rtmps://live-api-s.facebook.com:443/rtmp/${streamKey}`;
+//   } else if (platform === "Instagram") {
+//     rtmpUrl = `rtmps://edgetee-upload-ccu1-1.xx.fbcdn.net:443/rtmp/${streamKey}`;
+//   }
+
+//   return [
+//     "-i",
+//     "-",
+//     "-c:v",
+//     "libx264",
+//     "-preset",
+//     "ultrafast",
+//     "-tune",
+//     "zerolatency",
+//     "-r",
+//     `${25}`,
+//     "-g",
+//     `${25 * 2}`,
+//     "-keyint_min",
+//     25,
+//     "-crf",
+//     "25",
+//     "-pix_fmt",
+//     "yuv420p",
+//     "-sc_threshold",
+//     "0",
+//     "-profile:v",
+//     "main",
+//     "-level",
+//     "3.1",
+//     "-c:a",
+//     "aac",
+//     "-b:a",
+//     "128k",
+//     "-ar",
+//     128000 / 4,
+//     "-f",
+//     "flv",
+//     rtmpUrl,
+//   ];
+// };
+
+// const createFfmpegProcess = (platform, streamKey) => {
+//   const options = createFfmpegOptions(platform, streamKey);
+//   const ffmpegProcess = spawn("ffmpeg", options);
+
+//   ffmpegProcess.stdout.on("data", (data) => {
+//     console.log(`ffmpeg ${platform} stdout: ${data}`);
+//   });
+
+//   ffmpegProcess.stderr.on("data", (data) => {
+//     console.error(`ffmpeg ${platform} stderr: ${data}`);
+//   });
+
+//   // Handle error event on stdin stream
+//   ffmpegProcess.stdin.on("error", (err) => {
+//     console.error(`ffmpeg ${platform} stdin error: ${err}`);
+//     delete ffmpegProcesses[platform];
+//   });
+
+//   ffmpegProcess.on("close", (code) => {
+//     console.log(`ffmpeg ${platform} process exited with code ${code}`);
+//     delete ffmpegProcesses[platform];
+//   });
+
+//   return ffmpegProcess;
+// };
+
+// app.post("/start-stream", (req, res) => {
+//   const { platform, streamKeys } = req.body;
+
+//   if (!platform || !streamKeys) {
+//     return res
+//       .status(400)
+//       .json({ error: "Platform and stream keys are required" });
+//   }
+
+//   if (platform.includes("YouTube") && streamKeys.youtubeKey) {
+//     if (!ffmpegProcesses["YouTube"]) {
+//       ffmpegProcesses["YouTube"] = createFfmpegProcess(
+//         "YouTube",
+//         streamKeys.youtubeKey
+//       );
+//     }
+//   }
+
+//   if (platform.includes("Facebook") && streamKeys.facebookKey) {
+//     if (!ffmpegProcesses["Facebook"]) {
+//       ffmpegProcesses["Facebook"] = createFfmpegProcess(
+//         "Facebook",
+//         streamKeys.facebookKey
+//       );
+//     }
+//   }
+
+//   if (platform.includes("Instagram") && streamKeys.instagramKey) {
+//     if (!ffmpegProcesses["Instagram"]) {
+//       ffmpegProcesses["Instagram"] = createFfmpegProcess(
+//         "Instagram",
+//         streamKeys.instagramKey
+//       );
+//     }
+//   }
+
+//   res.json({ message: `Streaming started on ${platform}` });
+// });
+
+// app.post("/stop-stream", (req, res) => {
+//   const { platform } = req.body;
+
+//   if (!platform) {
+//     return res.status(400).json({ error: "Platform is required" });
+//   }
+
+//   if (platform.includes("YouTube")) {
+//     if (ffmpegProcesses["YouTube"]) {
+//       ffmpegProcesses["YouTube"].stdin.end();
+//       ffmpegProcesses["YouTube"].kill("SIGINT");
+//       delete ffmpegProcesses["YouTube"];
+//     }
+//   }
+
+//   if (platform.includes("Facebook")) {
+//     if (ffmpegProcesses["Facebook"]) {
+//       ffmpegProcesses["Facebook"].stdin.end();
+//       ffmpegProcesses["Facebook"].kill("SIGINT");
+//       delete ffmpegProcesses["Facebook"];
+//     }
+//   }
+
+//   if (platform.includes("Instagram")) {
+//     if (ffmpegProcesses["Instagram"]) {
+//       ffmpegProcesses["Instagram"].stdin.end();
+//       ffmpegProcesses["Instagram"].kill("SIGINT");
+//       delete ffmpegProcesses["Instagram"];
+//     }
+//   }
+
+//   res.json({ message: `Streaming stopped on ${platform}` });
+// });
+
+// io.on("connection", (socket) => {
+//   console.log("Socket Connected", socket.id);
+
+//   socket.on("binarystream", (stream) => {
+//     Object.values(ffmpegProcesses).forEach((ffmpegProcess) => {
+//       ffmpegProcess.stdin.write(stream, (err) => {
+//         if (err) {
+//           console.error("ffmpeg write error:", err);
+//         }
+//       });
+//     });
+//   });
+// });
+
+// const PORT = process.env.PORT || 8000;
+
+// connectDB()
+//   .then(() => {
+//     server.listen(PORT, () => {
+//       console.log(`Server listening on ${PORT}`);
+//     });
+//   })
+//   .catch((err) => {
+//     console.log("MONGODB connection failed:", err);
+//   });
+
+
+
+
+
+
+import dotenv from "dotenv";
+dotenv.config({});
+import connectDB from "./db/index.js";
+import { app } from "./app.js";
+
+import http from "http";
+import { Server as SocketIO } from "socket.io";
+import { spawn } from "child_process";
+import bodyParser from "body-parser";
+import cors from "cors";
+import jwt from "jsonwebtoken"; // Add JWT for token verification
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
@@ -15,157 +219,201 @@ app.use(bodyParser.json());
 // Use CORS middleware
 const server = http.createServer(app);
 const io = new SocketIO(server, {
-    cors: {
-        // origin: 'http://localhost:3001', // React app's origin
-        origin: 'https://streamease-ten.vercel.app',
-        methods: ['GET', 'POST']
-    }
+  cors: {
+    origin: `http://localhost:3000`, // React app's origin
+    methods: ["GET", "POST"],
+  },
 });
 
 let ffmpegProcesses = {};
 
-const createFfmpegOptions = (platform, streamKey) => {
-    let rtmpUrl;
-    if (platform === 'YouTube') {
-        rtmpUrl = `rtmp://a.rtmp.youtube.com/live2/${streamKey}`;
-    } else if (platform === 'Facebook') {
-        rtmpUrl = `rtmps://live-api-s.facebook.com:443/rtmp/${streamKey}`;
-    } else if (platform === 'Instagram') {
-        rtmpUrl = `rtmps://edgetee-upload-ccu1-1.xx.fbcdn.net:443/rtmp/${streamKey}`;
-    }
+// Verify token and extract user data
+io.use((socket, next) => {
+  const token = socket.handshake.query.token;
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) return next(new Error("Authentication error"));
+      socket.user = decoded; // Save the decoded user information to the socket
+      next();
+    });
+  } else {
+    next(new Error("Authentication error"));
+  }
+});
 
-    return [
-        '-i',
-        '-',
-        '-c:v', 'libx264',
-        '-preset', 'ultrafast',
-        '-tune', 'zerolatency',
-        '-r', `${25}`,
-        '-g', `${25 * 2}`,
-        '-keyint_min', 25,
-        '-crf', '25',
-        '-pix_fmt', 'yuv420p',
-        '-sc_threshold', '0',
-        '-profile:v', 'main',
-        '-level', '3.1',
-        '-c:a', 'aac',
-        '-b:a', '128k',
-        '-ar', 128000 / 4,
-        '-f', 'flv',
-        rtmpUrl
-    ];
+const createFfmpegOptions = (platform, streamKey) => {
+  let rtmpUrl;
+  if (platform === "YouTube") {
+    rtmpUrl = `rtmp://a.rtmp.youtube.com/live2/${streamKey}`;
+  } else if (platform === "Facebook") {
+    rtmpUrl = `rtmps://live-api-s.facebook.com:443/rtmp/${streamKey}`;
+  } else if (platform === "Instagram") {
+    rtmpUrl = `rtmps://edgetee-upload-ccu1-1.xx.fbcdn.net:443/rtmp/${streamKey}`;
+  }
+
+  return [
+    "-i",
+    "-",
+    "-c:v",
+    "libx264",
+    "-preset",
+    "ultrafast",
+    "-tune",
+    "zerolatency",
+    "-r",
+    `${25}`,
+    "-g",
+    `${25 * 2}`,
+    "-keyint_min",
+    25,
+    "-crf",
+    "25",
+    "-pix_fmt",
+    "yuv420p",
+    "-sc_threshold",
+    "0",
+    "-profile:v",
+    "main",
+    "-level",
+    "3.1",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "128k",
+    "-ar",
+    128000 / 4,
+    "-f",
+    "flv",
+    rtmpUrl,
+  ];
 };
 
 const createFfmpegProcess = (platform, streamKey) => {
-    const options = createFfmpegOptions(platform, streamKey);
-    const ffmpegProcess = spawn('ffmpeg', options);
+  const options = createFfmpegOptions(platform, streamKey);
+  const ffmpegProcess = spawn("ffmpeg", options);
 
-    ffmpegProcess.stdout.on('data', (data) => {
-        console.log(`ffmpeg ${platform} stdout: ${data}`);
-    });
+  ffmpegProcess.stdout.on("data", (data) => {
+    console.log(`ffmpeg ${platform} stdout: ${data}`);
+  });
 
-    ffmpegProcess.stderr.on('data', (data) => {
-        console.error(`ffmpeg ${platform} stderr: ${data}`);
-    });
+  ffmpegProcess.stderr.on("data", (data) => {
+    console.error(`ffmpeg ${platform} stderr: ${data}`);
+  });
 
-    // Handle error event on stdin stream
-    ffmpegProcess.stdin.on('error', (err) => {
-        console.error(`ffmpeg ${platform} stdin error: ${err}`);
-        delete ffmpegProcesses[platform];
-    });
+  // Handle error event on stdin stream
+  ffmpegProcess.stdin.on("error", (err) => {
+    console.error(`ffmpeg ${platform} stdin error: ${err}`);
+    delete ffmpegProcesses[platform];
+  });
 
-    ffmpegProcess.on('close', (code) => {
-        console.log(`ffmpeg ${platform} process exited with code ${code}`);
-        delete ffmpegProcesses[platform];
-    });
+  ffmpegProcess.on("close", (code) => {
+    console.log(`ffmpeg ${platform} process exited with code ${code}`);
+    delete ffmpegProcesses[platform];
+  });
 
-    return ffmpegProcess;
+  return ffmpegProcess;
 };
 
-app.post('/start-stream', (req, res) => {
-    const { platform, streamKeys } = req.body;
+app.post("/start-stream", (req, res) => {
+  const { platform, streamKeys } = req.body;
+  const userId = req.user._id; // Assuming user ID is available in req.user after authentication
 
-    if (!platform || !streamKeys) {
-        return res.status(400).json({ error: 'Platform and stream keys are required' });
+  if (!platform || !streamKeys) {
+    return res
+      .status(400)
+      .json({ error: "Platform and stream keys are required" });
+  }
+
+  if (platform.includes("YouTube") && streamKeys.youtubeKey) {
+    if (!ffmpegProcesses[`${userId}-YouTube`]) {
+      ffmpegProcesses[`${userId}-YouTube`] = createFfmpegProcess(
+        "YouTube",
+        streamKeys.youtubeKey
+      );
     }
+  }
 
-    if (platform.includes('YouTube') && streamKeys.youtubeKey) {
-        if (!ffmpegProcesses['YouTube']) {
-            ffmpegProcesses['YouTube'] = createFfmpegProcess('YouTube', streamKeys.youtubeKey);
-        }
+  if (platform.includes("Facebook") && streamKeys.facebookKey) {
+    if (!ffmpegProcesses[`${userId}-Facebook`]) {
+      ffmpegProcesses[`${userId}-Facebook`] = createFfmpegProcess(
+        "Facebook",
+        streamKeys.facebookKey
+      );
     }
+  }
 
-    if (platform.includes('Facebook') && streamKeys.facebookKey) {
-        if (!ffmpegProcesses['Facebook']) {
-            ffmpegProcesses['Facebook'] = createFfmpegProcess('Facebook', streamKeys.facebookKey);
-        }
+  if (platform.includes("Instagram") && streamKeys.instagramKey) {
+    if (!ffmpegProcesses[`${userId}-Instagram`]) {
+      ffmpegProcesses[`${userId}-Instagram`] = createFfmpegProcess(
+        "Instagram",
+        streamKeys.instagramKey
+      );
     }
+  }
 
-    if (platform.includes('Instagram') && streamKeys.instagramKey) {
-        if (!ffmpegProcesses['Instagram']) {
-            ffmpegProcesses['Instagram'] = createFfmpegProcess('Instagram', streamKeys.instagramKey);
-        }
-    }
-
-    res.json({ message: `Streaming started on ${platform}` });
+  res.json({ message: `Streaming started on ${platform}` });
 });
 
-app.post('/stop-stream', (req, res) => {
-    const { platform } = req.body;
+app.post("/stop-stream", (req, res) => {
+  const { platform } = req.body;
+  const userId = req.user._id; // Assuming user ID is available in req.user after authentication
 
-    if (!platform) {
-        return res.status(400).json({ error: 'Platform is required' });
+  if (!platform) {
+    return res.status(400).json({ error: "Platform is required" });
+  }
+
+  if (platform.includes("YouTube")) {
+    if (ffmpegProcesses[`${userId}-YouTube`]) {
+      ffmpegProcesses[`${userId}-YouTube`].stdin.end();
+      ffmpegProcesses[`${userId}-YouTube`].kill("SIGINT");
+      delete ffmpegProcesses[`${userId}-YouTube`];
     }
+  }
 
-    if (platform.includes('YouTube')) {
-        if (ffmpegProcesses['YouTube']) {
-            ffmpegProcesses['YouTube'].stdin.end();
-            ffmpegProcesses['YouTube'].kill('SIGINT');
-            delete ffmpegProcesses['YouTube'];
-        }
+  if (platform.includes("Facebook")) {
+    if (ffmpegProcesses[`${userId}-Facebook`]) {
+      ffmpegProcesses[`${userId}-Facebook`].stdin.end();
+      ffmpegProcesses[`${userId}-Facebook`].kill("SIGINT");
+      delete ffmpegProcesses[`${userId}-Facebook`];
     }
+  }
 
-    if (platform.includes('Facebook')) {
-        if (ffmpegProcesses['Facebook']) {
-            ffmpegProcesses['Facebook'].stdin.end();
-            ffmpegProcesses['Facebook'].kill('SIGINT');
-            delete ffmpegProcesses['Facebook'];
-        }
+  if (platform.includes("Instagram")) {
+    if (ffmpegProcesses[`${userId}-Instagram`]) {
+      ffmpegProcesses[`${userId}-Instagram`].stdin.end();
+      ffmpegProcesses[`${userId}-Instagram`].kill("SIGINT");
+      delete ffmpegProcesses[`${userId}-Instagram`];
     }
+  }
 
-    if (platform.includes('Instagram')) {
-        if (ffmpegProcesses['Instagram']) {
-            ffmpegProcesses['Instagram'].stdin.end();
-            ffmpegProcesses['Instagram'].kill('SIGINT');
-            delete ffmpegProcesses['Instagram'];
-        }
-    }
-
-    res.json({ message: `Streaming stopped on ${platform}` });
+  res.json({ message: `Streaming stopped on ${platform}` });
 });
 
-io.on('connection', socket => {
-    console.log('Socket Connected', socket.id);
+io.on("connection", (socket) => {
+  console.log("Socket Connected", socket.id);
 
-    socket.on('binarystream', stream => {
-        Object.values(ffmpegProcesses).forEach((ffmpegProcess) => {
-            ffmpegProcess.stdin.write(stream, (err) => {
-                if (err) {
-                    console.error('ffmpeg write error:', err);
-                }
-            });
+  socket.on("binarystream", (stream) => {
+    const userId = socket.user._id;
+    Object.keys(ffmpegProcesses).forEach((key) => {
+      if (key.startsWith(userId)) {
+        ffmpegProcesses[key].stdin.write(stream, (err) => {
+          if (err) {
+            console.error("ffmpeg write error:", err);
+          }
         });
+      }
     });
+  });
 });
 
 const PORT = process.env.PORT || 8000;
 
 connectDB()
-    .then(() => {
-        server.listen(PORT, () => {
-            console.log(`Server listening on ${PORT}`);
-        });
-    })
-    .catch((err) => {
-        console.log("MONGODB connection failed:", err);
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`Server listening on ${PORT}`);
     });
+  })
+  .catch((err) => {
+    console.log("MONGODB connection failed:", err);
+  });

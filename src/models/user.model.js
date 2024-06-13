@@ -29,6 +29,15 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
+    // instStreamKey:{
+    //   type: String,
+    // },
+    // facebookStreamKey:{
+    //   type: String,
+    // },
+    // youtubeStreamKey:{
+    //   type: String,
+    // },
     refreshToken: {
       type: String,
     },
