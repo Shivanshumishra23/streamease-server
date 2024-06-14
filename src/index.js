@@ -196,11 +196,6 @@
 //     console.log("MONGODB connection failed:", err);
 //   });
 
-
-
-
-
-
 import dotenv from "dotenv";
 dotenv.config({});
 import connectDB from "./db/index.js";
@@ -211,36 +206,32 @@ import { Server as SocketIO } from "socket.io";
 import { spawn } from "child_process";
 import bodyParser from "body-parser";
 import cors from "cors";
-import jwt from "jsonwebtoken"; // Add JWT for token verification
-
+import jwt from "jsonwebtoken";
+// import asyncHandler from "express-async-handler"; // Ensure you have this
+// import User from "./models/User.js"; // Ensure correct path to your User model
+import { verifyJWT,verifyToken } from "./middlewares/auth.middleware.js";
+import { User } from "./models/user.model.js";
+import cookieParser from "cookie-parser";
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
 
 // Use CORS middleware
+app.use(cors());
+
 const server = http.createServer(app);
 const io = new SocketIO(server, {
   cors: {
-    origin: `http://localhost:3000`, // React app's origin
-    methods: ["GET", "POST"],
+    origin:"http://localhost:3000", // React app's origin
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
   },
 });
 
-let ffmpegProcesses = {};
+// Manage ffmpeg processes per user
+let userFfmpegProcesses = {};
 
-// Verify token and extract user data
-io.use((socket, next) => {
-  const token = socket.handshake.query.token;
-  if (token) {
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) return next(new Error("Authentication error"));
-      socket.user = decoded; // Save the decoded user information to the socket
-      next();
-    });
-  } else {
-    next(new Error("Authentication error"));
-  }
-});
-
+// Create ffmpeg options based on platform and streamKey
 const createFfmpegOptions = (platform, streamKey) => {
   let rtmpUrl;
   if (platform === "YouTube") {
@@ -288,7 +279,8 @@ const createFfmpegOptions = (platform, streamKey) => {
   ];
 };
 
-const createFfmpegProcess = (platform, streamKey) => {
+// Create and manage ffmpeg process per user and platform
+const createFfmpegProcess = (userId, platform, streamKey) => {
   const options = createFfmpegOptions(platform, streamKey);
   const ffmpegProcess = spawn("ffmpeg", options);
 
@@ -300,109 +292,137 @@ const createFfmpegProcess = (platform, streamKey) => {
     console.error(`ffmpeg ${platform} stderr: ${data}`);
   });
 
-  // Handle error event on stdin stream
   ffmpegProcess.stdin.on("error", (err) => {
     console.error(`ffmpeg ${platform} stdin error: ${err}`);
-    delete ffmpegProcesses[platform];
+    delete userFfmpegProcesses[userId][platform];
   });
 
   ffmpegProcess.on("close", (code) => {
     console.log(`ffmpeg ${platform} process exited with code ${code}`);
-    delete ffmpegProcesses[platform];
+    delete userFfmpegProcesses[userId][platform];
   });
 
   return ffmpegProcess;
 };
 
-app.post("/start-stream", (req, res) => {
+
+app.post("/api/v1/users/start-stream", verifyJWT, (req, res) => {
   const { platform, streamKeys } = req.body;
-  const userId = req.user._id; // Assuming user ID is available in req.user after authentication
+  const userId = req.user._id;
+  console.log(`Streaming start on ${userId}`);
 
   if (!platform || !streamKeys) {
-    return res
-      .status(400)
-      .json({ error: "Platform and stream keys are required" });
+    return res.status(400).json({ error: "Platform and stream keys are required" });
+  }
+
+  if (!userFfmpegProcesses[userId]) {
+    userFfmpegProcesses[userId] = {};
   }
 
   if (platform.includes("YouTube") && streamKeys.youtubeKey) {
-    if (!ffmpegProcesses[`${userId}-YouTube`]) {
-      ffmpegProcesses[`${userId}-YouTube`] = createFfmpegProcess(
-        "YouTube",
-        streamKeys.youtubeKey
-      );
+    if (!userFfmpegProcesses[userId]["YouTube"]) {
+      userFfmpegProcesses[userId]["YouTube"] = createFfmpegProcess(userId, "YouTube", streamKeys.youtubeKey);
     }
   }
 
   if (platform.includes("Facebook") && streamKeys.facebookKey) {
-    if (!ffmpegProcesses[`${userId}-Facebook`]) {
-      ffmpegProcesses[`${userId}-Facebook`] = createFfmpegProcess(
-        "Facebook",
-        streamKeys.facebookKey
-      );
+    if (!userFfmpegProcesses[userId]["Facebook"]) {
+      userFfmpegProcesses[userId]["Facebook"] = createFfmpegProcess(userId, "Facebook", streamKeys.facebookKey);
     }
   }
 
   if (platform.includes("Instagram") && streamKeys.instagramKey) {
-    if (!ffmpegProcesses[`${userId}-Instagram`]) {
-      ffmpegProcesses[`${userId}-Instagram`] = createFfmpegProcess(
-        "Instagram",
-        streamKeys.instagramKey
-      );
+    if (!userFfmpegProcesses[userId]["Instagram"]) {
+      userFfmpegProcesses[userId]["Instagram"] = createFfmpegProcess(userId, "Instagram", streamKeys.instagramKey);
     }
   }
 
   res.json({ message: `Streaming started on ${platform}` });
 });
 
-app.post("/stop-stream", (req, res) => {
+
+app.post("/api/v1/users/stop-stream", verifyJWT, (req, res) => {
   const { platform } = req.body;
-  const userId = req.user._id; // Assuming user ID is available in req.user after authentication
+  const userId = req.user._id;
+  console.log(`Streaming stopped on ${userId}`);
 
   if (!platform) {
     return res.status(400).json({ error: "Platform is required" });
   }
 
   if (platform.includes("YouTube")) {
-    if (ffmpegProcesses[`${userId}-YouTube`]) {
-      ffmpegProcesses[`${userId}-YouTube`].stdin.end();
-      ffmpegProcesses[`${userId}-YouTube`].kill("SIGINT");
-      delete ffmpegProcesses[`${userId}-YouTube`];
+    if (userFfmpegProcesses[userId] && userFfmpegProcesses[userId]["YouTube"]) {
+      userFfmpegProcesses[userId]["YouTube"].stdin.end();
+      userFfmpegProcesses[userId]["YouTube"].kill("SIGINT");
+      delete userFfmpegProcesses[userId]["YouTube"];
     }
   }
 
   if (platform.includes("Facebook")) {
-    if (ffmpegProcesses[`${userId}-Facebook`]) {
-      ffmpegProcesses[`${userId}-Facebook`].stdin.end();
-      ffmpegProcesses[`${userId}-Facebook`].kill("SIGINT");
-      delete ffmpegProcesses[`${userId}-Facebook`];
+    if (userFfmpegProcesses[userId] && userFfmpegProcesses[userId]["Facebook"]) {
+      userFfmpegProcesses[userId]["Facebook"].stdin.end();
+      userFfmpegProcesses[userId]["Facebook"].kill("SIGINT");
+      delete userFfmpegProcesses[userId]["Facebook"];
     }
   }
 
   if (platform.includes("Instagram")) {
-    if (ffmpegProcesses[`${userId}-Instagram`]) {
-      ffmpegProcesses[`${userId}-Instagram`].stdin.end();
-      ffmpegProcesses[`${userId}-Instagram`].kill("SIGINT");
-      delete ffmpegProcesses[`${userId}-Instagram`];
+    if (userFfmpegProcesses[userId] && userFfmpegProcesses[userId]["Instagram"]) {
+      userFfmpegProcesses[userId]["Instagram"].stdin.end();
+      userFfmpegProcesses[userId]["Instagram"].kill("SIGINT");
+      delete userFfmpegProcesses[userId]["Instagram"];
     }
   }
 
   res.json({ message: `Streaming stopped on ${platform}` });
 });
 
+// io.use((socket, next)=>{
+//   cookieParser()(socket.request, socket.request.res , (err)=>{
+//          if(err) return next(err);
+//          const token = socket.request.cookies.accessToken;
+
+//          if (!token) {
+//           // console.log("No token provided. Disconnecting socket.");
+//           return next(new Error("No token provided"));
+//         }
+//         const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
+//   })
+// })
+
 io.on("connection", (socket) => {
   console.log("Socket Connected", socket.id);
 
+  const token = socket.handshake.query.token;
+  if (!token) {
+    console.log("No token provided. Disconnecting socket.");
+    return socket.disconnect(true);
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    socket.userId = decodedToken._id;
+    console.log(`socket userId: ${socket.userId}`);
+  } catch (err) {
+    console.error("Token verification failed. Disconnecting socket.");
+    return socket.disconnect(true);
+  }
+  // console.log(`socket userId: ${socket.userId}`);
+
   socket.on("binarystream", (stream) => {
-    const userId = socket.user._id;
-    Object.keys(ffmpegProcesses).forEach((key) => {
-      if (key.startsWith(userId)) {
-        ffmpegProcesses[key].stdin.write(stream, (err) => {
+    console.log(`Received stream data for user ${socket.userId}`);
+    if (userFfmpegProcesses[socket.userId]) {
+      Object.values(userFfmpegProcesses[socket.userId]).forEach((ffmpegProcess) => {
+        console.log(`Writing stream data to ffmpeg process for ${socket.userId} on platform`);
+        ffmpegProcess.stdin.write(stream, (err) => {
           if (err) {
             console.error("ffmpeg write error:", err);
           }
         });
-      }
-    });
+      });
+    } else {
+      console.error(`No ffmpeg processes found for user ${socket.userId}`);
+    }
   });
 });
 
@@ -417,3 +437,6 @@ connectDB()
   .catch((err) => {
     console.log("MONGODB connection failed:", err);
   });
+
+// Auth middleware
+

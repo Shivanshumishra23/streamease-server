@@ -11,8 +11,8 @@ WORKDIR /home/app
 
 COPY . .
 
-RUN npm install
-# RUN npm install -g nodemon
+# RUN npm install
+RUN npm install -g nodemon
 
-# CMD nodemon src/index.js
-CMD node src/index.js
+CMD nodemon src/index.js
+# CMD node src/index.js
