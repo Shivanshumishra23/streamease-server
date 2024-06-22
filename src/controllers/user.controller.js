@@ -175,6 +175,135 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 });
 
 
+const addInstaStreamkey = asyncHandler(async (req, res) => {
+  try {
+    const { Instagram } = req.body;
+    if (!Instagram) {
+      return res.status(400).json({ error: "Instagram Stream key is required" });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.Instagram = Instagram;
+    await user.save();
+
+    return res.status(200).json({ message: "Instagram Stream key updated successfully" });
+  } catch (error) {
+    console.error("Error updating Instagram stream key:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+const addYouTubeStreamkey = asyncHandler(async (req, res) => {
+  try {
+    const { YouTube } = req.body;
+    if (!YouTube) {
+      return res.status(400).json({ error: "YouTube Stream key is required" });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.YouTube = YouTube;
+    await user.save();
+
+    return res.status(200).json({ message: "YouTube Stream key updated successfully" });
+  } catch (error) {
+    console.error("Error updating YouTube stream key:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+const addFacebookStreamkey = asyncHandler(async (req, res) => {
+  try {
+    const { Facebook } = req.body;
+    if (!Facebook) {
+      return res.status(400).json({ error: "Facebook Stream key is required" });
+    }
+
+    const user = await User.findById(req.user?._id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.Facebook = Facebook;
+    await user.save();
+
+    return res.status(200).json({ message: "Facebook Stream key updated successfully" });
+  } catch (error) {
+    console.error("Error updating Facebook stream key:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+// const getAllStreamkeys = asyncHandler(async (req, res) => {
+//   try {
+//     // Fetch the user by ID
+//     const user = await User.findById(req.user?._id);
+
+//     // Check if the user exists
+//     if (!user) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     // Extract the stream keys
+//     const { instStreamKey, youtubeStreamKey, facebookStreamKey } = user;
+
+//     // Return the stream keys in the response
+//     return res.status(200).json({
+//       instStreamKey,
+//       youtubeStreamKey,
+//       facebookStreamKey,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching stream keys:", error);
+//     return res.status(500).json({ error: "Internal server error" });
+//   }
+// });
+
+const getAllStreamkeys = asyncHandler(async (req, res) => {
+  try {
+    // Fetch the user by ID
+    const user = await User.findById(req.user?._id);
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    // Extract the stream keys
+    const { Instagram, YouTube, Facebook } = user;
+
+    // Create a list of platforms with their keys
+    const platforms = [];
+    if (YouTube) {
+      platforms.push({ name: "YouTube", key: YouTube });
+    }
+    if (Facebook) {
+      platforms.push({ name: "Facebook", key: Facebook });
+    }
+    if (Instagram) {
+      platforms.push({ name: "Instagram", key: Instagram });
+    }
+
+    // Return the platforms in the response
+    return res.status(200).json({ platforms });
+  } catch (error) {
+    console.error("Error fetching stream keys:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+
+
+
 export {
   registerUser,
   loginUser,
@@ -183,4 +312,8 @@ export {
   changeCurrentPassword,
   getCurrentUser,
   updateAccountDetails,
+  addInstaStreamkey,
+  addFacebookStreamkey,
+  addYouTubeStreamkey,
+  getAllStreamkeys
 };

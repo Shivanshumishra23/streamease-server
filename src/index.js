@@ -221,8 +221,8 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new SocketIO(server, {
   cors: {
-    // origin:"http://localhost:3000", // React app's origin
-    origin: 'https://streamease-ten.vercel.app',
+    origin:"http://localhost:3001", // React app's origin
+    // origin: 'https://streamease-ten.vercel.app',
     methods: ['GET', 'POST'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,

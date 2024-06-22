@@ -29,15 +29,18 @@ const userSchema = new Schema(
       type: String,
       required: [true, "Password is required"],
     },
-    // instStreamKey:{
-    //   type: String,
-    // },
-    // facebookStreamKey:{
-    //   type: String,
-    // },
-    // youtubeStreamKey:{
-    //   type: String,
-    // },
+    Instagram:{
+      type: String,
+      unique: true,
+    },
+    Facebook:{
+      type: String,
+      unique: true,
+    },
+    YouTube:{
+      type: String,
+      unique: true,
+    },
     refreshToken: {
       type: String,
     },

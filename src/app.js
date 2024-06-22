@@ -10,8 +10,8 @@ const app = express();
 
 // Use CORS middleware
 const corsOptions = {
-  // origin:"http://localhost:3000" , // Adjust this to match your frontend's origin
-  origin: 'https://streamease-ten.vercel.app',
+  origin:"http://localhost:3001" , // Adjust this to match your frontend's origin
+  // origin: 'https://streamease-ten.vercel.app',
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
